@@ -1,14 +1,32 @@
 import streamlit as st
+import json
+import os
 
-# Dummy in-memory user database (for demo only)
+# ---------------- HELPER FUNCTIONS ---------------- #
+USER_FILE = "users.json"
+
+def load_users():
+    """Load users from JSON file."""
+    if os.path.exists(USER_FILE):
+        with open(USER_FILE, "r") as f:
+            return json.load(f)
+    else:
+        # Default user for first time
+        return {"admin": "1234"}
+
+def save_users(users):
+    """Save users to JSON file."""
+    with open(USER_FILE, "w") as f:
+        json.dump(users, f)
+
+# ---------------- SESSION INIT ---------------- #
 if "users" not in st.session_state:
-    st.session_state["users"] = {"admin": "1234", "kamesh": "password"}
+    st.session_state["users"] = load_users()
 
-# Track if user is logged in
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-# Function: Login Page
+# ---------------- PAGES ---------------- #
 def login_page():
     st.markdown("<h2 style='text-align: center;'>🔐 Login</h2>", unsafe_allow_html=True)
 
@@ -30,7 +48,7 @@ def login_page():
     if st.button("Don't have an account? Sign Up"):
         st.session_state.page = "signup"
 
-# Function: Sign Up Page
+
 def signup_page():
     st.markdown("<h2 style='text-align: center;'>📝 Sign Up</h2>", unsafe_allow_html=True)
 
@@ -49,6 +67,7 @@ def signup_page():
             st.warning("⚠️ Username & Password must be at least 3 characters long.")
         else:
             st.session_state["users"][new_user] = new_pass
+            save_users(st.session_state["users"])
             st.success("✅ Account created successfully! Please login.")
             st.session_state.page = "login"
 
@@ -56,11 +75,11 @@ def signup_page():
     if st.button("Already have an account? Login"):
         st.session_state.page = "login"
 
-# Function: Dashboard Page (after login)
+
 def dashboard():
     st.markdown(f"<h2>👋 Hello, {st.session_state.current_user}</h2>", unsafe_allow_html=True)
     st.success("You are logged in!")
-    st.write("👉 Here you can show your app dashboard.")
+    st.write("👉 Here you can show your app dashboard (charts, data, etc.).")
 
     if st.button("Logout"):
         st.session_state.logged_in = False
